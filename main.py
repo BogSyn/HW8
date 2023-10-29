@@ -4,10 +4,7 @@ import copy
 
 
 def get_birthday_per_week(users, today=date.today()) -> dict:
-    # Перевірка наявності користувачів
-    if not users:
-        return []
-
+   
     # Створення словника для днів тижня
     week_dict = {
         'Monday': [],
@@ -31,8 +28,11 @@ def get_birthday_per_week(users, today=date.today()) -> dict:
 
     # Визначення алгоритму обробки тижня в залежності від поточного дня
     if today.weekday() == 0:
-        start_week = today - timedelta(days=2)
+        start_week = today
         end_week = today + timedelta(days=4)
+    elif today.weekday() == 6:
+        start_week = today
+        end_week = today + timedelta(days=5)
     else:
         start_week = today
         end_week = today + timedelta(days=6)
