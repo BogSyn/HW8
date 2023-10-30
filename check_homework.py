@@ -1,138 +1,163 @@
-from datetime import datetime
-from main import get_birthday_per_week
-import copy
+"""
+==============================================================================
+Цей файл є тестом домашнього завдання.
+Будь ласка, НЕ вносьте зміни до цього файлу без попереднього узгодження з ментором.
+==============================================================================
+"""
 
-test_counter = 0
+import unittest
+from datetime import datetime, timedelta
+from unittest.mock import patch
 
-# Test 1: коли усі дні народження користувачів є у майбутньому і не випадають на вихідні.
-day_test_1 = datetime(2023, 10, 22).date()
-test_1 = [
-    {"name": "Aria Blackwood", "birthday": datetime(1988, 10, 24).date()},
-    {"name": "Ethan Nightingale", "birthday": datetime(1976, 11, 3).date()},
-    {"name": "Luna Starling", "birthday": datetime(1992, 10, 25).date()},
-    {"name": "Caspian Ashford", "birthday": datetime(1985, 11, 1).date()},
-    {"name": "Isadora Hart", "birthday": datetime(2000, 10, 26).date()},
-    {"name": "Sebastian Frost", "birthday": datetime(1980, 12, 26).date()},
-    {"name": "Aurora Woods", "birthday": datetime(1995, 10, 27).date()},
-    {"name": "Xander Storm", "birthday": datetime(1972, 10, 27).date()},
-    {"name": "Violet Winter", "birthday": datetime(1987, 10, 28).date()},
-    {"name": "Phoenix Rivers", "birthday": datetime(2005, 10, 29).date()},
-]
-compare_list_1 = {
-    'Tuesday': ['Aria'],
-    'Wednesday': ['Luna'],
-    'Thursday': ['Isadora'],
-    'Friday': ['Aurora', 'Xander']
-}
+from main import get_birthdays_per_week
 
-if get_birthday_per_week(test_1, today=day_test_1) == compare_list_1:
-    test_counter += 1
-    print("\033[92m1. Успішно пройдений тест коли усі дні народження користувачів є у майбутньому і не випадають на вихідні.\033[0m")
-else:
-    print("\033[91m1. Провалено тест коли коли усі дні народження користувачів є у майбутньому і не випадають на вихідні.\033[0m")
+RED = "\033[91m"
+GREEN = "\033[92m"
+RESET = "\033[0m"
 
 
-# Test 2: коли дні народження деяких користувачів випадають на вихідні.
-day_test_2 = datetime(2023, 10, 25).date()
-test_2 = [
-    {"name": "Aria Blackwood", "birthday": datetime(1988, 11, 1).date()},
-    {"name": "Ethan Nightingale", "birthday": datetime(1976, 11, 2).date()},
-    {"name": "Luna Starling", "birthday": datetime(1992, 12, 28).date()},
-    {"name": "Caspian Ashford", "birthday": datetime(1985, 12, 29).date()},
-    {"name": "Isadora Hart", "birthday": datetime(2000, 10, 27).date()},
-    {"name": "Sebastian Frost", "birthday": datetime(1980, 10, 27).date()},
-    {"name": "Aurora Woods", "birthday": datetime(1995, 10, 29).date()},
-    {"name": "Xander Storm", "birthday": datetime(1972, 10, 28).date()},
-    {"name": "Violet Winter", "birthday": datetime(1987, 10, 31).date()},
-    {"name": "Phoenix Rivers", "birthday": datetime(2005, 10, 26).date()},
-]
-compare_list_2 = {
-    'Monday': ['Aurora', 'Xander'],
-    'Tuesday': ['Violet'],
-    'Thursday': ['Phoenix'],
-    'Friday': ['Isadora', 'Sebastian']
-}
+class CustomTestResult(unittest.TextTestResult):
+    def addSuccess(self, test):
+        super().addSuccess(test)
+        self.stream.write(f"{GREEN} {test.shortDescription()} {RESET}\n")
 
-if get_birthday_per_week(test_2, today=day_test_2) == compare_list_2:
-    test_counter += 1
-    print("\033[92m2. Успішно пройдений тест коли дні народження деяких користувачів випадають на вихідні.\033[0m")
-else:
-    print("\033[91m2. Провалено тест коли дні народження деяких користувачів випадають на вихідні.\033[0m")
+    def addFailure(self, test, err):
+        self.failures.append((test, str(err[1])))
+        self._mirrorOutput = True
+        self.stream.write(f"{RED} {str(err[1])} {RESET}\n")
 
+    def printErrors(self):
+        if self.errors:
+            print(
+                f"{RED}Ваш код викликає помилки при виконанні тесту. Перевірте чи ви виконали імпорт 'from datetime import date'{RESET}"
+            )
+            self.printErrorList("ERROR:", self.errors)
+        self.stream.write(f"\nВсього пройдено {self.testsRun} тестів.\n")
+        failed, errored = len(self.failures), len(self.errors)
+        if failed:
+            self.stream.write(f"{RED}Провалених тестів: {failed} {RESET}\n")
+        if errored:
+            self.stream.write(
+                f"{RED} Помилок при виконанні тестів: {errored} {RESET}\n"
+            )
 
-# Test 3: коли деякі дні народження користувачів вже минули у цьому році.
-day_test_3 = datetime(2023, 12, 28).date()
-test_3 = [
-    {"name": "Aria Blackwood", "birthday": datetime(1988, 5, 15).date()},
-    {"name": "Ethan Nightingale", "birthday": datetime(1976, 12, 28).date()},
-    {"name": "Luna Starling", "birthday": datetime(1992, 7, 20).date()},
-    {"name": "Caspian Ashford", "birthday": datetime(1985, 12, 29).date()},
-    {"name": "Isadora Hart", "birthday": datetime(2000, 3, 27).date()},
-    {"name": "Sebastian Frost", "birthday": datetime(1980, 12, 31).date()},
-    {"name": "Aurora Woods", "birthday": datetime(1995, 1, 1).date()},
-    {"name": "Xander Storm", "birthday": datetime(1972, 1, 2).date()},
-    {"name": "Violet Winter", "birthday": datetime(1987, 1, 3).date()},
-    {"name": "Phoenix Rivers", "birthday": datetime(2005, 1, 10).date()},
-]
-compare_list_3 = {
-    'Monday': ['Sebastian', 'Aurora'],
-    'Tuesday': ['Xander'],
-    'Wednesday': ['Violet'],
-    'Thursday': ['Ethan'],
-    'Friday': ['Caspian']
-}
-if get_birthday_per_week(test_3, today=day_test_3) == compare_list_3:
-    test_counter += 1
-    print("\033[92m3. Успішно пройдений тест коли деякі дні народження користувачів вже минули у цьому році.\033[0m")
-else:
-    print("\033[91m3. Провалено тест коли коли деякі дні народження користувачів вже минули у цьому році.\033[0m")
+    def getDescription(self, test):
+        return ""
 
 
-# Test 4: коли у списку немає користувачів.
-test_4 = [copy.deepcopy(test_3)]
-test_4.clear()
-
-if get_birthday_per_week(test_4) == {}:
-    test_counter += 1
-    print("\033[92m4. Успішно пройдений тест коли у списку немає користувачів.\033[0m")
-else:
-    print("\033[91m4. Провалено тест коли коли у списку немає користувачів.\033[0m")
+class CustomTestRunner(unittest.TextTestRunner):
+    resultclass = CustomTestResult
 
 
-# Test 5: коли всі дні народження користувачів вже минули у цьому році.
-day_test_5 = datetime(2023, 12, 29).date()
-test_5 = [
-    {"name": "Aria Blackwood", "birthday": datetime(1988, 1, 3).date()},
-    {"name": "Ethan Nightingale", "birthday": datetime(1976, 1, 2).date()},
-    {"name": "Luna Starling", "birthday": datetime(1992, 5, 28).date()},
-    {"name": "Caspian Ashford", "birthday": datetime(1985, 7, 29).date()},
-    {"name": "Isadora Hart", "birthday": datetime(2000, 9, 27).date()},
-    {"name": "Sebastian Frost", "birthday": datetime(1980, 8, 27).date()},
-    {"name": "Aurora Woods", "birthday": datetime(1995, 10, 2).date()},
-    {"name": "Xander Storm", "birthday": datetime(1972, 1, 1).date()},
-    {"name": "Violet Winter", "birthday": datetime(1987, 4, 25).date()},
-    {"name": "Phoenix Rivers", "birthday": datetime(2005, 1, 1).date()},
-]
-compare_list_5 = {
-    'Monday': ['Xander', 'Phoenix'],
-    'Tuesday': ['Ethan'],
-    'Wednesday': ['Aria'],
-}
-if get_birthday_per_week(test_5, today=day_test_5) == compare_list_5:
-    test_counter += 1
-    print(
-        "\033[92m5. Успішно пройдений тест коли всі дні народження користувачів вже минули у цьому році.\033[0m\n")
-else:
-    print("\033[91m5. Провалено тест коли всі дні народження користувачів вже минули у цьому році.\033[0m\n")
+class TestGetBirthdaysPerWeek(unittest.TestCase):
+    def setUp(self):
+        self.today = datetime(2023, 12, 26)
+
+    @patch("main.date")
+    def test_all_past_birthdays_this_year(self, date_mock):
+        """
+        1. Успішно пройдено тест коли всі дні народження користувачів вже минули у цьому році
+        """
+        date_mock.today.return_value = self.today.date()
+        users = [
+            {"name": "John", "birthday": (self.today - timedelta(days=10)).date()},
+            {"name": "Doe", "birthday": (self.today - timedelta(days=20)).date()},
+        ]
+        result = get_birthdays_per_week(users)
+        expected = {}
+        assert (
+            result == expected
+        ), """1. Провалено тест коли всі дні народження користувачів вже минули у цьому році. Функція повинна повертати пустий словник"""
+
+    @patch("main.date")
+    def test_empty_users(self, date_mock):
+        """
+        2. Успішно пройдено тест коли у функцію передали пустий список користувачів
+        """
+        date_mock.today.return_value = self.today.date()
+        users = []
+        result = get_birthdays_per_week(users)
+        expected = {}
+        assert (
+            result == expected
+        ), """2. Провалено тест коли у функцію передали пустий список користувачів. Функція повинна повертати пустий словник"""
+
+    @patch("main.date")
+    def test_weekend_birthdays(self, date_mock):
+        """
+        5. Успішно пройдено тест коли функція повернула правильний список днів народження користувачів, причому деякі припадають на вихідні
+        """
+        date_mock.today.return_value = self.today.date()
+        users = [
+            {
+                "name": "John",
+                "birthday": (self.today + timedelta(days=5)).date(),
+            },
+            {
+                "name": "Doe",
+                "birthday": (self.today + timedelta(days=6)).date(),
+            },
+            {"name": "Alice", "birthday": (self.today + timedelta(days=3)).date()},
+        ]
+        result = get_birthdays_per_week(users)
+        expected = {"Monday": ["John", "Doe"], "Friday": ["Alice"]}
+        assert (
+            result == expected
+        ), "5. Провалено тест коли дні народження деяких користувачів випадають на вихідні. Функція повернула не правильний словник"
+
+    @patch("main.date")
+    def test_past_birthdays_next_week(self, date_mock):
+        """
+        4. Успішно пройдено тест коли функція повернула правильний список днів народження користувачів, де деякі дні народження вже минули в цьому році, але вони будуть на наступному тижні
+        """
+        date_mock.today.return_value = self.today.date()
+        users = [
+            {
+                "name": "John",
+                "birthday": (self.today + timedelta(days=-5)).date(),
+            },
+            {
+                "name": "Doe",
+                "birthday": (self.today + timedelta(days=-6)).date(),
+            },
+            {
+                "name": "Alice",
+                "birthday": (datetime(2021, 1, 1)).date(),
+            },
+        ]
+        result = get_birthdays_per_week(users)
+        expected = {
+            "Monday": ["Alice"],
+        }
+        assert (
+            result == expected
+        ), """4. Провалено тест бо функція повернула не правильний список днів народження користувачів, де деякі вже минули в цьому році, але вони будуть на наступному тижні"""
+
+    @patch("main.date")
+    def test_future_birthdays(self, date_mock):
+        """
+        3. Успішно пройдено тест коли функція повернула правильний список днів народження користувачів які не припадають на вихідні
+        """
+
+        date_mock.today.return_value = self.today.date()
+        users = [
+            {
+                "name": "John",
+                "birthday": (self.today + timedelta(days=1)).date(),
+            },
+            {
+                "name": "Doe",
+                "birthday": (self.today + timedelta(days=3)).date(),
+            },
+            {"name": "Alice", "birthday": (self.today + timedelta(days=-3)).date()},
+        ]
+        result = get_birthdays_per_week(users)
+        expected = {"Wednesday": ["John"], "Friday": ["Doe"]}
+        assert (
+            result == expected
+        ), """3. Провалено тест бо функція повернула не правильний список днів народження користувачів які є у майбутньому та вони не припадають на вихідні"""
 
 
-# Кількіст пройдених тестів
-print(f"Всього пройдено тестів {test_counter}")
-
-# Кількість провалених тестів
-if test_counter < 5:
-    print(f"\033[91mПровалених тестів: {5 - test_counter}\033[0m")
-
-# Сепаратор для розмежування
-separator = "-" * 100
-print(separator)
+if __name__ == "__main__":
+    runner = CustomTestRunner(verbosity=0)
+    unittest.main(testRunner=runner)

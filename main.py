@@ -1,10 +1,11 @@
-from datetime import datetime, timedelta, date
-import re
+from datetime import date, datetime, timedelta
 import copy
 
 
-def get_birthday_per_week(users, today=date.today()) -> dict:
-   
+def get_birthdays_per_week(users):
+
+    today = date.today()
+
     # Створення словника для днів тижня
     week_dict = {
         'Monday': [],
@@ -41,16 +42,26 @@ def get_birthday_per_week(users, today=date.today()) -> dict:
     for user_dict in users_list:
         birth_day = datetime.strftime(user_dict["birthday"], '%A')
         if start_week <= user_dict["birthday"] <= end_week:
-            first_name = re.findall(r'([A-Z,a-z]+)\ ', user_dict["name"])
             if birth_day in ['Saturday', 'Sunday']:
-                week_dict['Monday'].append(first_name[0])
+                week_dict['Monday'].append(user_dict["name"])
             else:
-                week_dict[birth_day].append(first_name[0])
+                week_dict[birth_day].append(user_dict["name"])
 
     # Створення словника з ім'ям дня тижня та списком імен, які мають дні народження цього тижня
-    birthday_dict = {}
+    users = {}
     for key, value in week_dict.items():
         if value:
-            birthday_dict[key] = value
+            users[key] = value
+    return users
 
-    return birthday_dict
+
+if __name__ == "__main__":
+    users = [
+        {"name": "Jan Koum", "birthday": datetime(1976, 10, 30).date()},
+    ]
+
+    result = get_birthdays_per_week(users)
+    print(result)
+    # Виводимо результат
+    for day_name, names in result.items():
+        print(f"{day_name}: {', '.join(names)}")
